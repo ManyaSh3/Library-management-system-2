@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "apexcharts": "^3.52.0",
+    "chart.js": "^4.4.3",
+    "vue-apexcharts": "^1.6.2",
+    "vue-chartjs": "^5.3.1"
+  }
+}
