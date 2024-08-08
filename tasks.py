@@ -1,26 +1,43 @@
 from celery import shared_task
-import time
-from flask_excel import make_response_from_query_sets
-# from models import StudyResource
-# from mail_service import send_email
+from flask import render_template
+from flask_mail import Message
+from extensions import db, mail
+from models import User, Section, Book
+import pdfkit
 
-@shared_task()
-def add(x,y):
+@shared_task(name='tasks.add')
+def add(x, y):
+    import time
     time.sleep(15)
-    return x+y
+    return x + y
 
-# @shared_task(ignore_result = False)
-# def export_job():
-#     resource = StudyResource.query.with_entities(StudyResource.topic, StudyResource.content).all()
+@shared_task(name='tasks.generate_monthly_report')
+def generate_monthly_report(user_email):
+    from celery_worker import app as flask_app
+    with flask_app.app_context():
+        try:
+            sections = Section.query.all()
+            e_books = Book.query.all()
 
-#     csv_out = make_response_from_query_sets(resource, ['topic','content'], 'csv', filename="study.csv")
+            html = render_template('monthly_report.html', sections=sections, e_books=e_books)
 
-#     with open('./user-downloads/file.csv', 'wb') as file:
-#         file.write(csv_out.data)
-    
-#     return 'file.csv'
+            pdf = pdfkit.from_string(html, False)
 
-# @shared_task
-# def daily_reminder(to,sub, message):
-#     send_email(to, sub, message)
-#     return "OK"
+            msg = Message('Monthly Activity Report', recipients=[user_email])
+            msg.body = 'Please find attached your monthly activity report.'
+            msg.attach('monthly_report.pdf', 'application/pdf', pdf)
+
+            mail.send(msg)
+            print(f"Email sent to {user_email}")
+        except Exception as e:
+            print(f"Error generating report for {user_email}: {e}")
+
+
+@shared_task(name='tasks.schedule_monthly_reports')
+def schedule_monthly_reports():
+    from celery_worker import app as flask_app
+    with flask_app.app_context():
+        users = User.query.all()
+        for user in users:
+            generate_monthly_report.delay(user.email)
+            print(f"Scheduled report generation for {user.email}")

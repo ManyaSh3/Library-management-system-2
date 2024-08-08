@@ -4,18 +4,31 @@ from flask_security.utils import hash_password, verify_password
 from extensions import db
 from models import User, Role, Book, Section, BookIssue, BookRequest
 from datetime import datetime
-from tasks import add
+from celery.result import AsyncResult 
 
 def create_view(app, user_datastore : SQLAlchemyUserDatastore,cache):
 
+    @app.route('/trigger-monthly-report')
+    def trigger_monthly_report():
+        from tasks import schedule_monthly_reports
+        schedule_monthly_reports.delay()
+        return jsonify({"status": "Monthly report generation triggered"})
+    
+    @app.route('/test-report')
+    def test_report():
+        sections = Section.query.all()
+        e_books = Book.query.all()
+        return render_template('monthly_report.html', sections=sections, e_books=e_books)
 
     @app.route('/test-celery')
     def test_celery():
+        from tasks import add
         result = add.delay(4, 4)
         return jsonify({"task_id": result.id, "status": result.status})
     
     @app.route('/task-status/<task_id>')
     def task_status(task_id):
+        from tasks import add
         result = add.AsyncResult(task_id)
         return jsonify({"task_id": task_id, "status": result.status, "result": result.result})
 

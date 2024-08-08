@@ -52,7 +52,7 @@ const Signup = {
         const data = await res.json();
         console.log(data);
         // Handle successful sign up, e.g., redirect or store token
-        router.push("/login");
+        router.push("/user-login");
       } else {
         const errorData = await res.json();
         console.error("Sign up failed:", errorData);

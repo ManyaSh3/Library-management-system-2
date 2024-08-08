@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Monthly Activity Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            padding: 5px 0;
+            border-bottom: 1px solid #ccc;
+        }
+        .section-title {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Monthly Activity Report</h1>
+    <h2>Sections</h2>
+    <ul>
+        {% for section in sections %}
+            <li>
+                <span class="section-title">{{ section.title }}</span>: {{ section.description }}
+            </li>
+        {% endfor %}
+    </ul>
+    <h2>E-Books</h2>
+    <ul>
+        {% for book in e_books %}
+            <li>
+                <span class="section-title">{{ book.title }}</span> by {{ book.author }}
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

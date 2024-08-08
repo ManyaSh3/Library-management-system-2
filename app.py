@@ -1,14 +1,7 @@
 from flask import Flask
-import views
-from extensions import db, security, cache
+from extensions import db, security, cache, mail
 from create_initial_data import create_data
-import resources
-from flask_caching import Cache
-from worker import celery_init_app
-import flask_excel as excel 
-# from tasks import daily_reminder
-from celery.schedules import crontab
-
+from celery_worker import make_celery
 
 
 def create_app():
@@ -18,66 +11,67 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///data.db"
     app.config['SECURITY_PASSWORD_SALT'] = 'salty-password'
 
-    # configure token
+    # Configure token
     app.config['SECURITY_TOKEN_AUTHENTICATION_HEADER'] = 'Authentication-Token'
-    app.config['SECURITY_TOKEN_MAX_AGE'] = 3600 #1hr
+    app.config['SECURITY_TOKEN_MAX_AGE'] = 3600  # 1hr
     app.config['SECURITY_LOGIN_WITHOUT_CONFIRMATION'] = True
 
-
-    # cache config
-
+    # Cache config
     app.config["CACHE_DEFAULT_TIMEOUT"] = 300
     app.config["DEBUG"] = True
     app.config["CACHE_TYPE"] = "RedisCache"
     app.config["CACHE_REDIS_PORT"] = 6379
 
+    # Celery config
+    app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
+    app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/1'
 
-    
-    cache.init_app(app)
+    # Gmail SMTP configuration
+    app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+    app.config['MAIL_PORT'] = 587
+    app.config['MAIL_USE_TLS'] = True
+    app.config['MAIL_USE_SSL'] = False  # Make sure this is False when using TLS
+    app.config['MAIL_USERNAME'] = 'manyasharma0309@gmail.com'
+    app.config['MAIL_PASSWORD'] = 'fwgi ugrn jazn ssut'
+    app.config['MAIL_DEFAULT_SENDER'] = 'manyasharma0309@gmail.com'
+
+    # Initialize extensions
     db.init_app(app)
-    
+    mail.init_app(app)
+    cache.init_app(app)
 
     with app.app_context():
-
+        # Import models and routes here to avoid circular imports
         from models import User, Role
         from flask_security import SQLAlchemyUserDatastore
+        import views
+        import resources
 
-        user_datastore = SQLAlchemyUserDatastore(db, User, Role) 
-
+        # Setup Flask-Security
+        user_datastore = SQLAlchemyUserDatastore(db, User, Role)
         security.init_app(app, user_datastore)
 
+        # Create database tables
         db.create_all()
-        
+
+        # Create initial data
         create_data(user_datastore)
 
+        # Register views and APIs
+        views.create_view(app, user_datastore, cache)
+        resources.api.init_app(app)  # Initialize Flask-RESTful
+
+    # Security-related configurations
     app.config['WTF_CSRF_CHECK_DEFAULT'] = False
     app.config['SECURITY_CSRF_PROTECT_MECHANISHMS'] = []
     app.config['SECURITY_CSRF_IGNORE_UNAUTH_ENDPOINTS'] = True
 
-
-    views.create_view(app, user_datastore, cache)
-
-    # connect flask to flask_restful
-    resources.api.init_app(app)
-
     return app
 
 
+# Create Flask app and Celery app
 app = create_app()
-celery_app = celery_init_app(app)
-# excel.init_excel(app)
-
-
-# @celery_app.on_after_configure.connect
-# def setup_periodic_tasks(sender, **kwargs):
-#     # Calls test('hello') every 10 seconds.
-#     # sender.add_periodic_task(10.0, daily_reminder.s('test@gmail', 'Testing', '<h2> content here </h2>'), name='add every 10')
-
-#     # Executes every Monday morning at 7:30 a.m.
-#     sender.add_periodic_task(
-#         crontab(hour=22, minute=20, day_of_week=3),
-#         daily_reminder.s('test2@gmail', 'from crontab', 'content'),
-#     )   
+celery_app = make_celery(app)
 
 if __name__ == "__main__":
     app.run(debug=True)
