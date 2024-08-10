@@ -21,7 +21,7 @@ import ResetPassword from "../pages/reset_password.js";
 import RatingsAndReviews from "../pages/ratingsandreviews.js";
 import UserDashboard from "../pages/UserStats.js";
 import LibrarianDashboard from "../pages/LibrarianDashboard.js";
-
+import DownloadBook from '../pages/download_book.js';
 const routes = [
   { path: "/", component: Home },
   { path: "/user-login", component: Login },
@@ -45,7 +45,7 @@ const routes = [
   {path: "/rate-and-review/:bookId",name: 'RateAndReview', component: RatingsAndReviews,meta: { requiresLogin: true, role: "user" }},
   {path: "/dashboard-user",name:UserDashboard, component: UserDashboard,meta: { requiresLogin: true, role: "user" }},
   {path: "/librarian-dashboard",name:LibrarianDashboard, component: LibrarianDashboard,meta: { requiresLogin: true, role: "librarian" }},
-
+  {path: '/download-book/:bookId',name: 'DownloadBook', component: DownloadBook}
 ];
 
 const router = new VueRouter({

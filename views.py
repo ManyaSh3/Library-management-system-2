@@ -2,11 +2,42 @@ from flask import render_template_string, render_template, request, jsonify, ses
 from flask_security import current_user, auth_required, roles_required, SQLAlchemyUserDatastore
 from flask_security.utils import hash_password, verify_password
 from extensions import db
-from models import User, Role, Book, Section, BookIssue, BookRequest
+from models import User, Role, Book, Section, BookIssue, BookRequest, UserVisit
 from datetime import datetime
 from celery.result import AsyncResult 
 
 def create_view(app, user_datastore : SQLAlchemyUserDatastore,cache):
+
+    @app.route('/test-db-visit')
+    def test_db_visit():
+        visits = UserVisit.query.all()
+        return jsonify([{'id': v.id, 'user_id': v.user_id, 'last_visit': v.last_visit} for v in visits])
+
+    
+    def log_user_visit(email, id):
+        print(f"Logging visit for user: {email} (ID: {id})")
+        
+        # Check if a visit record already exists for the user
+        visit = UserVisit.query.filter_by(user_id=id).first()
+        
+        if visit:
+            # If the record exists, update the last_visit time
+            visit.last_visit = datetime.utcnow()
+            print(f"Updated last visit time for user: {email} (ID: {id})")
+        else:
+            # If no record exists, create a new visit record
+            visit = UserVisit(user_id=id, last_visit=datetime.utcnow())
+            db.session.add(visit)
+            print(f"Created new visit record for user: {email} (ID: {id})")
+        
+        try:
+            db.session.commit()
+            print("Visit logged successfully")
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error logging visit: {e}")
+
+   
 
     @app.route('/trigger-monthly-report')
     def trigger_monthly_report():
@@ -89,6 +120,10 @@ def create_view(app, user_datastore : SQLAlchemyUserDatastore,cache):
             token = user.get_auth_token()
             user_role = user.roles[0].name if user.roles else 'No role'
             print(f"Login successful for user: {email}, role: {user_role}, token: {token}")
+
+            # Log user visit
+            log_user_visit(user.email,user.id)
+
             return jsonify({'token': token, 'email': user.email, 'role': user_role, 'user_id': user.id}), 200
         else:
             return jsonify({'message': 'invalid password'}), 400
@@ -128,9 +163,10 @@ def create_view(app, user_datastore : SQLAlchemyUserDatastore,cache):
             """
         )
     
+   
     @app.route('/add-section', methods=['POST'])
     @roles_required('librarian')
-    # @auth_required('token')
+        # @auth_required('token')
     def add_section():
         data = request.get_json()
         title = data.get('title')
@@ -158,32 +194,3 @@ def create_view(app, user_datastore : SQLAlchemyUserDatastore,cache):
     def get_sections():
         sections = Section.query.all()
         return jsonify([{'id': section.id, 'title': section.title, 'description': section.description} for section in sections])
-
-    # @app.route('/add-book', methods=['POST'])
-    # @roles_required('librarian')
-    # @auth_required('token')
-    # def add_book():
-    #     data = request.get_json()
-    #     title = data.get('title')
-    #     author = data.get('author')
-    #     content = data.get('content')
-    #     section_id = data.get('section_id')
-
-    #     if not title or not author or not content or not section_id:
-    #         return jsonify({'message': 'Missing required fields'}), 400
-
-    #     try:
-    #         new_book = Book(
-    #             title=title,
-    #             author=author,
-    #             content=content,
-    #             date_created=db.func.current_timestamp(),
-    #             section_id=section_id
-    #         )
-    #         db.session.add(new_book)
-    #         db.session.commit()
-    #         return jsonify({'message': 'Book added successfully'}), 200
-    #     except Exception as e:
-    #         print(f'Error while adding book: {e}')
-    #         db.session.rollback()
-    #         return jsonify({'message': 'Error while adding book'}), 500

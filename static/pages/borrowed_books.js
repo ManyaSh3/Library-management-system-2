@@ -16,6 +16,8 @@ const BorrowedBooks = {
           <p class="card-text">Status: {{ book.status ? 'Active' : 'Returned' }}</p>
           <button @click="returnBook(book.book_id)" class="btn btn-primary">Return Book</button>
           <button @click="goToRatingsAndReviews(book.book_id)" class="btn btn-secondary">Provide Rating & Review</button>
+          <button @click="readBook(book.book_id)" class="btn btn-success">Read Book</button>
+          <button @click="downloadBook(book.book_id)" class="btn btn-info">Download Book</button>
         </div>
       </div>
     </div>
@@ -87,6 +89,14 @@ const BorrowedBooks = {
     },
     goToRatingsAndReviews(bookId) {
       router.push(`/rate-and-review/${bookId}`);
+    },
+    readBook(bookId) {
+      // Redirect to the external site for reading the book
+      window.open(`https://chapmanganelo.com/manga-ek118878/chapter-1`, '_blank');
+    },
+    downloadBook(bookId) {
+      // Redirect to the download book page
+      router.push(`/download-book/${bookId}`);
     },
     checkAuth() {
       if (!store.state.loggedIn) {

@@ -52,6 +52,7 @@ book_fields = {
     'author': fields.String,
     'content': fields.String,
     'section_id': fields.Integer,
+    'date_created': fields.DateTime,
 }
 
 book_request_fields = {
@@ -85,7 +86,7 @@ borrowed_book_fields = {
 class SectionResource(Resource):
     @auth_required('token')
     @marshal_with(section_fields)
-    @cache.cached(timeout=300)
+    # @cache.cached(timeout=300)
     def get(self):
         all_sections = SectionModel.query.all()
         return all_sections
@@ -105,7 +106,7 @@ class SectionResource(Resource):
 class BookResource(Resource):
     @auth_required('token')
     @marshal_with(book_fields)
-    @cache.cached(timeout=300, key_prefix='books_section_%s')
+    # @cache.cached(timeout=300, key_prefix='books_section_%s')
     def get(self, section_id):
         books = BookModel.query.filter_by(section_id=section_id).all()
         return books
@@ -456,7 +457,7 @@ class RevokeAccessResource(Resource):
 
 class BookDetailsResource(Resource):
     @auth_required('token')
-    @cache.cached(timeout=300, key_prefix='book_details_%s')
+    # @cache.cached(timeout=300, key_prefix='book_details_%s')
     def get(self, book_id):
         book = BookModel.query.get(book_id)
         if not book:
@@ -466,6 +467,7 @@ class BookDetailsResource(Resource):
             'title': book.title,
             'author': book.author,
             'content': book.content,
+            # 'date_created': book.date_created,
         }, 200
 
 
@@ -672,6 +674,23 @@ class LibrarianPieDataResource(Resource):
         img.seek(0)
         return send_file(img, mimetype='image/png')
 
+class BookRatingsResource(Resource):
+    def get(self, book_id):
+        book = BookModel.query.get_or_404(book_id)
+        reviews = RatingsAndReviews.query.filter_by(book_id=book.id).all()
+        
+        ratings = [{
+            'rating': review.rating,
+            'review': review.review,
+            'date_created': review.date_created
+        } for review in reviews]
+        
+        return jsonify({
+            'book_id': book.id,
+            'title': book.title,
+            'author': book.author,
+            'ratings': ratings
+        })
 
 
 
@@ -707,3 +726,4 @@ api.add_resource(UserPieDataResource, '/user-pie-data')
 api.add_resource(LibrarianBarDataResource, '/librarian-bar-data')
 api.add_resource(LibrarianLineDataResource, '/librarian-line-data')
 api.add_resource(LibrarianPieDataResource, '/librarian-pie-data')
+api.add_resource(BookRatingsResource, '/books/<int:book_id>/ratings')

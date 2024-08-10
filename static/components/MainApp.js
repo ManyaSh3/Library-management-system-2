@@ -39,6 +39,41 @@ const MainApp = {
           </form>
         </div>
       </div>
+      
+      <!-- Recently Added Books Section -->
+      <div v-if="recentlyAddedBooks.length > 0" class="section-container" style="margin-bottom: 30px;">
+        <h2 class="section-title" style="margin-bottom: 20px; text-align: center;">Recently Added Book</h2>
+        <div class="books-container" style="display: flex; flex-wrap: wrap; justify-content: center;">
+          <div v-for="book in recentlyAddedBooks" :key="book.id" class="book-card-container" style="flex: 1 1 calc(33.333% - 20px); max-width: calc(33.333% - 20px); margin: 10px;">
+            <Book
+              :id="book.id"
+              :title="book.title"
+              :author="book.author"
+              :description="book.content"
+            />
+          </div>
+        </div>
+      </div>
+      <div v-else class="text-center" style="margin-bottom: 30px;">
+        <h2 class="section-title" style="margin-bottom: 20px;">Recently Added Book</h2>
+        <p>No recently added books.</p>
+      </div>
+
+      <!-- Highly Rated Books Section -->
+      <div v-if="highlyRatedBooks.length > 0" class="section-container" style="margin-bottom: 30px;">
+        <h2 class="section-title" style="margin-bottom: 20px; text-align: center;">Highly Rated Books</h2>
+        <div class="books-container" style="display: flex; flex-wrap: wrap; justify-content: center;">
+          <div v-for="book in highlyRatedBooks" :key="book.id" class="book-card-container" style="flex: 1 1 calc(33.333% - 20px); max-width: calc(33.333% - 20px); margin: 10px;">
+            <Book
+              :id="book.id"
+              :title="book.title"
+              :author="book.author"
+              :description="book.content"
+            />
+          </div>
+        </div>
+      </div>
+
       <div v-for="section in filteredSectionsWithBooks" :key="section.id" class="section-container" style="margin-bottom: 30px;">
         <h2 class="section-title" style="margin-bottom: 20px; text-align: center;">{{ section.title }}</h2>
         <div class="books-container" style="display: flex; flex-wrap: wrap; justify-content: center;">
@@ -64,6 +99,8 @@ const MainApp = {
       searchTitle: '',
       searchAuthor: '',
       sectionsWithBooks: [],
+      recentlyAddedBooks: [],
+      highlyRatedBooks: [],
     };
   },
   computed: {
@@ -126,16 +163,89 @@ const MainApp = {
           }
 
           const books = await booksResponse.json();
-          section.books = books;
+          section.books = books.map(book => {
+            const parsedDate = new Date(book.date_created);
+            console.log(`Book ID: ${book.id}, Original Date: ${book.date_created}, Parsed Date: ${parsedDate}`);
+            return {
+              ...book,
+              date_created: parsedDate,  // Properly parse the UTC date string
+            };
+          });
           return section;
         }));
 
         this.sectionsWithBooks = sectionsWithBooks;
         this.sections = sections; // Ensure sections are also set for the dropdown
+        this.recentlyAddedBooks = this.getRecentlyAddedBooks();
+        this.highlyRatedBooks = await this.getHighlyRatedBooks(); // Updated to be async
         console.log('Sections with books fetched:', this.sectionsWithBooks);
       } catch (error) {
         console.error('Error fetching sections with books:', error);
       }
+    },
+    getRecentlyAddedBooks() {
+      const books = this.sectionsWithBooks.flatMap(section => section.books);
+      if (books.length === 0) {
+        console.log('No books found in sections.');
+        return [];
+      }
+    
+      console.log('All books with their dates:', books.map(book => ({ id: book.id, date_created: book.date_created })));
+    
+      // Find the most recent date_created including time
+      const mostRecentTimestamp = books.reduce((latest, book) => {
+        const bookTimestamp = book.date_created.getTime();  // Ensure it's a Date object
+        console.log(`Book ID: ${book.id}, Date Created: ${book.date_created}, Timestamp: ${bookTimestamp}`);
+        return bookTimestamp > latest ? bookTimestamp : latest;
+      }, 0); // Initializing with the earliest possible timestamp (0 represents the Unix epoch)
+    
+      console.log('Most recent timestamp found:', mostRecentTimestamp);
+    
+      // Filter books to only include those added at the most recent timestamp
+      const recentlyAdded = books.filter(book => book.date_created.getTime() === mostRecentTimestamp);
+    
+      console.log('Recently added books:', recentlyAdded);
+      return recentlyAdded;
+    },
+    async getHighlyRatedBooks() {
+      const books = this.sectionsWithBooks.flatMap(section => section.books);
+
+      const booksWithRatings = await Promise.all(
+        books.map(async book => {
+          try {
+            const response = await fetch(`/api/books/${book.id}/ratings`, {
+              headers: {
+                "Authentication-Token": sessionStorage.getItem("token"),
+                'Content-Type': 'application/json',
+              },
+            });
+
+            if (!response.ok) {
+              const errorText = await response.text();
+              console.error(`Error fetching ratings for book ID ${book.id}:`, errorText);
+              return null;  // Exclude books with error in fetching ratings
+            }
+
+            const data = await response.json();
+            const averageRating = data.ratings.length > 0
+              ? data.ratings.reduce((sum, rating) => sum + rating.rating, 0) / data.ratings.length
+              : 0;
+
+            // Exclude books with no ratings
+            if (averageRating > 0) {
+              return { ...book, rating: averageRating };
+            } else {
+              return null;
+            }
+          } catch (error) {
+            console.error(`Error fetching ratings for book ID ${book.id}:`, error);
+            return null;
+          }
+        })
+      );
+
+      // Filter out books with no ratings (null entries), sort by rating, and return the top 5
+      return booksWithRatings.filter(book => book !== null).sort((a, b) => b.rating - a.rating).slice(0, 5);
     },
     searchBooks() {
       // This method will trigger the computed property `filteredSectionsWithBooks`
