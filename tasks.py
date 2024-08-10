@@ -33,7 +33,6 @@ def generate_monthly_report(user_email):
         except Exception as e:
             print(f"Error generating report for {user_email}: {e}")
 
-
 @shared_task(name='tasks.schedule_monthly_reports')
 def schedule_monthly_reports():
     from celery_worker import app as flask_app
@@ -66,17 +65,31 @@ def send_reminder(user_email):
     except Exception as e:
         print(f"Failed to send reminder to {user_email}: {e}")
 
-def check_and_revoke_overdue_books(user_id):
+@shared_task(name='tasks.check_and_revoke_overdue_books')
+def check_and_revoke_overdue_books():
     today = datetime.utcnow().date()
-    overdue_books = []
-    issues = BookIssue.query.filter_by(user_id=user_id, status=True).all()
+    users = User.query.all()  # Get all users
 
-    for issue in issues:
-        if issue.date_return < today:
-            # Keep track of the overdue book
-            overdue_books.append(issue.book)
-            # Delete the BookIssue record
-            db.session.delete(issue)
-            db.session.commit()
+    for user in users:
+        # Query all overdue books for the current user
+        overdue_books = BookIssue.query.filter(
+            BookIssue.user_id == user.id,
+            BookIssue.status == True,
+            BookIssue.date_return < today
+        ).all()
 
-    return overdue_books
+        if overdue_books:
+            try:
+                # Remove all overdue books for the user
+                for issue in overdue_books:
+                    db.session.delete(issue)
+
+                # Commit the transaction once
+                db.session.commit()
+                print(f"Revoked {len(overdue_books)} overdue books for user ID {user.id}.")
+            except Exception as e:
+                db.session.rollback()
+                print(f"Failed to revoke overdue books for user ID {user.id}: {e}")
+
+    return {user.id: [issue.book for issue in overdue_books] for user in users if overdue_books}  
+    # Return a dictionary of user IDs to lists of the actual Book objects that were revoked

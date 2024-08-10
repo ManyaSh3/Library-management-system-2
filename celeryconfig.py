@@ -17,7 +17,7 @@ beat_schedule = {
     },
     'check-and-revoke-overdue-books': {
         'task': 'tasks.check_and_revoke_overdue_books',
-        'schedule': crontab(minute=0, hour=0),  # Run at 1:00 AM every day
+        'schedule': crontab(minute=0, hour=0),  # Run at 12:00 AM every day
     },
 }
 

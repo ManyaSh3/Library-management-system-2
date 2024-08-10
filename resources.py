@@ -62,8 +62,8 @@ book_request_fields = {
     'date_requested': fields.DateTime,
     'status': fields.Boolean,
     'days': fields.Integer,
-    'book_title': fields.String(attribute='books.title'),
-    'book_author': fields.String(attribute='books.author'),
+    'book_title': fields.String,
+    'book_author': fields.String,
 }
 
 def format_datetime(value):
@@ -139,9 +139,10 @@ class BookRequestResource(Resource):
         # Check if the user has already requested the same book
         existing_request = BookRequest.query.filter_by(book_id=book_id, user_id=user_id).first()
         already_issued = BookIssue.query.filter_by(book_id=book_id, user_id=user_id, status=True).first()
-        if existing_request or already_issued:
+        if existing_request :
             return {'message': 'You have already requested this book.'}, 400
-        
+        if already_issued :
+            return {'message': 'You have already issued this book.'}, 400
         active_requests_count = BookRequest.query.filter_by(user_id=user_id, status=True).count()
         
         if active_requests_count >= 5:
@@ -166,10 +167,24 @@ class BookRequestResource(Resource):
 class BookRequestListResource(Resource):
     @auth_required('token')
     @marshal_with(book_request_fields)
-    @cache.cached(timeout=60)
+    # @cache.cached(timeout=60)
     def get(self):
-        all_requests = BookRequest.query.all()
-        return all_requests
+        # Perform a join between BookRequest and Book to get the title and author
+        all_requests = db.session.query(
+            BookRequest,
+            BookModel.title.label('book_title'),
+            BookModel.author.label('book_author')
+        ).join(BookModel, BookRequest.book_id == BookModel.id).all()
+
+        # Manually map the results to include title and author with BookRequest fields
+        result = []
+        for request, title, author in all_requests:
+            request.book_title = title
+            request.book_author = author
+            result.append(request)
+
+        return result
+
 
 class BookRequestApproveResource(Resource):
     @auth_required('token')

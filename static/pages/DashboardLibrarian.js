@@ -67,8 +67,8 @@ const DashboardLibrarian = {
           </tbody>
         </table>
 
-        <div v-if="issuedBooks.length > 0" :style="issuedBooksContainerStyle">
-          <h2 :style="sectionTitleStyle">Issued Books</h2>
+        <div v-if="issuedBooks.length > 0" :style="issuedBooksContainerStyle" ref="issuedBooksSection">
+          <h2 :style="sectionTitleStyle">Issued Books <button @click="closeIssuedBooks" :style="closeButtonStyle">X</button> </h2>
           <table :style="tableStyle">
             <thead :style="tableHeadStyle">
               <tr>
@@ -93,8 +93,8 @@ const DashboardLibrarian = {
           </table>
         </div>
 
-        <div v-if="showRatingsAndReviews" :style="ratingsContainerStyle">
-          <h2 :style="sectionTitleStyle">Ratings and Reviews</h2>
+        <div v-if="showRatingsAndReviews" :style="ratingsContainerStyle"  ref="ratingsSection">
+          <h2 :style="sectionTitleStyle">Ratings and Reviews <button @click="closeRatingsAndReviews" :style="closeButtonStyle">X</button> </h2>
           <table :style="tableStyle">
             <thead :style="tableHeadStyle">
               <tr>
@@ -302,9 +302,24 @@ const DashboardLibrarian = {
         marginTop: '2rem',
         width: '100%',
       },
+      closeButtonStyle: {
+        background: 'transparent',
+        border: 'none',
+        color: '#dc3545',
+        fontSize: '1.5rem',
+        cursor: 'pointer',
+        float: 'right',
+      },
     };
   },
   methods: {
+    closeIssuedBooks() {
+      this.issuedBooks = [];  // This will hide the issued books section
+    },
+  
+    closeRatingsAndReviews() {
+      this.showRatingsAndReviews = false;  // This will hide the ratings and reviews section
+    },
     async fetchDashboardStats() {
       try {
         // Fetch total books
@@ -380,6 +395,10 @@ const DashboardLibrarian = {
         if (!response.ok) throw new Error('Failed to fetch issued books');
         const issuedBooksData = await response.json();
         this.issuedBooks = issuedBooksData;
+         // Scroll to the issued books section
+        this.$nextTick(() => {
+          this.$refs.issuedBooksSection.scrollIntoView({ behavior: 'smooth' });
+        });
       } catch (error) {
         console.error('Error fetching issued books:', error);
       }
@@ -420,6 +439,10 @@ const DashboardLibrarian = {
       this.showRatingsAndReviews = !this.showRatingsAndReviews;
       if (this.showRatingsAndReviews) {
         this.fetchRatingsAndReviews();
+        // Scroll to the ratings and reviews section
+        this.$nextTick(() => {
+          this.$refs.ratingsSection.scrollIntoView({ behavior: 'smooth' });
+        });
       }
     },
     hoverStatCard(event) {

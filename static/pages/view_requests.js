@@ -74,7 +74,9 @@ const ViewRequest = {
         }
 
         // Refresh the requests list after approval
-        this.fetchRequests();
+        console.log('Book request approved. Refreshing list...');
+        await this.fetchRequests();
+        // this.fetchRequests();
       } catch (error) {
         console.error('Error approving request:', error);
       }
@@ -101,7 +103,10 @@ const ViewRequest = {
         }
 
         // Refresh the requests list after rejection
-        this.fetchRequests();
+        // reload the page
+        console.log('Book request rejected. Refreshing list...');
+        await this.fetchRequests();
+        // this.fetchRequests();
       } catch (error) {
         console.error('Error rejecting request:', error);
       }
