@@ -6,7 +6,7 @@ const ViewSection = {
     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; background-color: #f0f2f5;">
       <div style="text-align: center; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); width: 80%; max-width: 800px;">
         <h1 style="margin-bottom: 1.5rem;">Books in Section {{ sectionId }}</h1>
-        <div v-if="books.length === 0" style="margin-top: 1.5rem;">No books found for this section.</div>
+        <div v-if="books.length === 0" style="margin-top: 1.5rem; margin-bottom: 1.5rem">No books found for this section.</div>
         <ul v-else style="list-style: none; padding: 0;">
           <li v-for="book in books" :key="book.id" style="margin-bottom: 1rem; border-bottom: 1px solid #ddd; padding-bottom: 1rem;">
             <h3>{{ book.title }}</h3>
@@ -51,14 +51,14 @@ const ViewSection = {
         if (!res.ok) {
           const errorData = await res.text();
           console.error("Fetch books request failed:", errorData);
-          alert(`Failed to fetch books: ${errorData}`);
+          // alert(`Failed to fetch books: ${errorData}`);
           return;
         }
 
         this.books = await res.json();
       } catch (error) {
         console.error("Error fetching books:", error);
-        alert('Failed to fetch books. Please try again later.');
+        // alert('Failed to fetch books. Please try again later.');
       }
     },
     editBook(bookId) {
@@ -85,6 +85,7 @@ const ViewSection = {
         }
 
         alert('Book deleted successfully');
+        window.location.reload(); // Refresh the page
         this.fetchBooks(); // Refresh the list of books
       } catch (error) {
         console.error("Error deleting book:", error);

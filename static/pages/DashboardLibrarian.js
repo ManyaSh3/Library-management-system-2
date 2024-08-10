@@ -6,7 +6,7 @@ const DashboardLibrarian = {
     <div :style="dashboardContainerStyle">
       <div :style="dashboardContentStyle">
         <h1 :style="dashboardTitleStyle">Librarian Dashboard</h1>
-        <p :style="welcomeTextStyle">Welcome, {{ username }}! Manage your library efficiently.</p>
+        <p :style="welcomeTextStyle">Welcome Miss Librarian! Manage your library efficiently.</p>
         <div :style="statsContainerStyle">
           <div :style="statCardStyle" @mouseover="hoverStatCard" @mouseout="unhoverStatCard">
             <h3 :style="statTitleStyle">Total Books</h3>

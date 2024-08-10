@@ -95,7 +95,7 @@ const DownloadBookPage = {
       // Simulate book download
       alert(`Downloading book: ${this.bookDetails.title}`);
       window.open(`https://drive.usercontent.google.com/u/0/uc?id=0B95YmvPPuCydY29yeUVCOW5hems&export=download`, '_blank');
-      // Here you can implement the actual download logic, e.g., generating a file download from the server
+      
     },
     checkAuth() {
       if (!store.state.loggedIn) {

@@ -3,26 +3,28 @@ import router from '../utils/router.js';
 
 const RatingsAndReviews = {
   template: `
-    <div>
+    <div class="ratingscontainer">
       <h2 class="text-center my-4">Rate and Review</h2>
-      <div v-if="book">
-        <h3 class="text-center">{{ book.title }} by {{ book.author }}</h3>
-        <form @submit.prevent="submitReview">
+      <div v-if="book" class="book-details">
+        <h3 class="text-center book-title">{{ book.title }} <span class="text-muted">by {{ book.author }}</span></h3>
+        <form @submit.prevent="submitReview" class="review-form">
           <div class="form-group">
-            <label for="rating">Rating:</label>
-            <select v-model="rating" id="rating" class="form-control" required>
+            <label for="rating" class="form-label">Rating:</label>
+            <select v-model="rating" id="rating" class="form-select" required>
               <option value="" disabled>Select a rating</option>
-              <option v-for="n in 5" :key="n" :value="n">{{ n }}</option>
+              <option v-for="n in 5" :key="n" :value="n">{{ n }} Stars</option>
             </select>
           </div>
           <div class="form-group">
-            <label for="review">Review:</label>
-            <textarea v-model="review" id="review" class="form-control" rows="5" required></textarea>
+            <label for="review" class="form-label">Review:</label>
+            <textarea v-model="review" id="review" class="form-control" rows="5" required placeholder="Write your review here..."></textarea>
           </div>
-          <button type="submit" class="btn btn-primary">Submit</button>
+          <div v-if="errorMessage" class="alert alert-danger">
+            {{ errorMessage }}
+          </div>
+          <button type="submit" class="btn btn-primary btn-block mt-3">Submit Review</button>
         </form>
       </div>
-      <div v-else class="text-center">Loading book details...</div>
     </div>
   `,
   data() {
@@ -30,6 +32,12 @@ const RatingsAndReviews = {
       book: null,
       rating: '',
       review: '',
+      errorMessage: '',
+      ratingscontainer: {
+        margin: '10px',
+        backgroundColor: '#f9f9f9',
+        fontFamily: 'Arial, sans-serif',
+      },
     };
   },
   methods: {
@@ -79,7 +87,12 @@ const RatingsAndReviews = {
         if (!response.ok) {
           const errorText = await response.text();
           console.error('Error response:', errorText);
-          throw new Error(errorText || 'Failed to submit review');
+          if (errorText.includes("You have already submitted a review for this book")) {
+            this.errorMessage = "You have already submitted a review for this book.";
+          } else {
+            this.errorMessage = "Failed to submit review. Please try again later.";
+          }
+          return;
         }
 
         const data = await response.json();
@@ -88,7 +101,7 @@ const RatingsAndReviews = {
         this.$router.push('/borrowed_books'); // Redirect back to borrowed books
       } catch (error) {
         console.error('Error submitting review:', error);
-        alert('Failed to submit review. Please try again later.');
+        this.errorMessage = 'Failed to submit review. Please try again later.';
       }
     },
     checkAuth() {

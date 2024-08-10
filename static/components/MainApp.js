@@ -41,9 +41,13 @@ const MainApp = {
       </div>
       
       <!-- Recently Added Books Section -->
-      <div v-if="recentlyAddedBooks.length > 0" class="section-container" style="margin-bottom: 30px;">
-        <h2 class="section-title" style="margin-bottom: 20px; text-align: center;">Recently Added Book</h2>
-        <div class="books-container" style="display: flex; flex-wrap: wrap; justify-content: center;">
+      <div class="section-container" style="margin-bottom: 30px;">
+        <h2 @click="toggleSection('recentlyAddedVisible')" class="section-title" :style="headingStyle">
+          Recently Added Book
+          <span v-if="recentlyAddedVisible" class="toggle-icon" :style="toggleIconStyle">-</span>
+          <span v-else class="toggle-icon" :style="toggleIconStyle">+</span>
+        </h2>
+        <div v-if="recentlyAddedVisible" class="books-container" style="display: flex; flex-wrap: wrap; justify-content: center;">
           <div v-for="book in recentlyAddedBooks" :key="book.id" class="book-card-container" style="flex: 1 1 calc(33.333% - 20px); max-width: calc(33.333% - 20px); margin: 10px;">
             <Book
               :id="book.id"
@@ -54,15 +58,15 @@ const MainApp = {
           </div>
         </div>
       </div>
-      <div v-else class="text-center" style="margin-bottom: 30px;">
-        <h2 class="section-title" style="margin-bottom: 20px;">Recently Added Book</h2>
-        <p>No recently added books.</p>
-      </div>
 
       <!-- Highly Rated Books Section -->
-      <div v-if="highlyRatedBooks.length > 0" class="section-container" style="margin-bottom: 30px;">
-        <h2 class="section-title" style="margin-bottom: 20px; text-align: center;">Highly Rated Books</h2>
-        <div class="books-container" style="display: flex; flex-wrap: wrap; justify-content: center;">
+      <div class="section-container" style="margin-bottom: 30px;">
+        <h2 @click="toggleSection('highlyRatedVisible')" class="section-title" :style="headingStyle">
+          Highly Rated Books
+          <span v-if="highlyRatedVisible" class="toggle-icon" :style="toggleIconStyle">-</span>
+          <span v-else class="toggle-icon" :style="toggleIconStyle">+</span>
+        </h2>
+        <div v-if="highlyRatedVisible" class="books-container" style="display: flex; flex-wrap: wrap; justify-content: center;">
           <div v-for="book in highlyRatedBooks" :key="book.id" class="book-card-container" style="flex: 1 1 calc(33.333% - 20px); max-width: calc(33.333% - 20px); margin: 10px;">
             <Book
               :id="book.id"
@@ -73,6 +77,7 @@ const MainApp = {
           </div>
         </div>
       </div>
+
 
       <div v-for="section in filteredSectionsWithBooks" :key="section.id" class="section-container" style="margin-bottom: 30px;">
         <h2 class="section-title" style="margin-bottom: 20px; text-align: center;">{{ section.title }}</h2>
@@ -101,6 +106,26 @@ const MainApp = {
       sectionsWithBooks: [],
       recentlyAddedBooks: [],
       highlyRatedBooks: [],
+      recentlyAddedVisible: false, // Visibility toggle for recently added books
+      highlyRatedVisible: false, // Visibility toggle for highly rated books
+      headingStyle: {
+        cursor: 'pointer',
+        textAlign: 'center',
+        fontSize: '1.8rem',
+        color: '#333',
+        backgroundColor: '#F7F7F7',
+        padding: '10px 20px',
+        borderRadius: '8px',
+        marginTop: '10px',
+        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+        transition: 'background-color 0.3s, box-shadow 0.3s',
+      },
+      toggleIconStyle: {
+        marginLeft: '10px',
+        fontSize: '1.2rem',
+        color: '#555',
+        verticalAlign: 'middle',
+      },
     };
   },
   computed: {
@@ -255,7 +280,14 @@ const MainApp = {
       this.selectedSection = '';
       this.searchTitle = '';
       this.searchAuthor = '';
-    }
+    },
+    toggleSection(section) {
+      if (section === 'recentlyAddedVisible') {
+        this.recentlyAddedVisible = !this.recentlyAddedVisible;
+      } else if (section === 'highlyRatedVisible') {
+        this.highlyRatedVisible = !this.highlyRatedVisible;
+      }
+    },
   },
 };
 

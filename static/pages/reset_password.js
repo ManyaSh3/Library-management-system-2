@@ -35,10 +35,8 @@ const ResetPassword = {
       });
 
       if (res.ok) {
-        const data = await res.json();
-        console.log(data);
         alert('Password reset successfully. Please login with your new password.');
-        router.push("/login");
+        router.push("/user-login");
       } else {
         const errorData = await res.json();
         console.error("Reset password failed:", errorData);

@@ -20,15 +20,31 @@ const Logout = {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${store.state.token}`, // Add token if needed for auth
         },
         credentials: "same-origin", // Include credentials (cookies) with the request
       });
 
       if (res.ok) {
+        console.log("Logout request successful");
+
+        // Commit the logout mutation
+        store.commit('logout');
+        
+        // Clear any authentication-related data stored in localStorage
+        localStorage.removeItem('loggedIn');
+        localStorage.removeItem('role');
+        localStorage.removeItem('token');
+
+        // Update the logout success state
         this.logoutSuccess = true;
-        store.commit('setlogout'); // Commit the logout mutation to update the Vuex store
+
+        // Optionally redirect the user to a different page after logout
+        setTimeout(() => {
+          this.$router.push('/user-login');
+        }, 2000); // Redirect after 2 seconds
       } else {
-        console.error("Logout request failed:", res.statusText);
+        console.error("Logout request failed with status:", res.status);
       }
     } catch (error) {
       console.error("Error during logout request:", error);

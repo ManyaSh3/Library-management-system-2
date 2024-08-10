@@ -42,64 +42,65 @@ const DashboardUser = {
         alignItems: 'center',
         justifyContent: 'center',
         minHeight: '100vh',
-        backgroundColor: '#F5F5DC', // Changed to beige only
+        backgroundColor: '#F0F0F0',
         padding: '20px',
         fontFamily: '"Helvetica Neue", Arial, sans-serif',
       },
       dashboardContentStyle: {
         textAlign: 'center',
         background: 'white',
-        padding: '2rem',
+        padding: '2.5rem',
         borderRadius: '12px',
-        boxShadow: '0 10px 20px rgba(0, 0, 0, 0.1)',
-        width: '100%',
-        maxWidth: '900px', // Adjusted for more content
+        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
+        width: '95%',
+        maxWidth: '1200px', // Wider for more content
       },
       dashboardTitleStyle: {
         marginBottom: '2rem',
-        fontSize: '2.5rem',
-        color: '#555',
+        fontSize: '2.8rem',
+        color: '#333',
         fontWeight: 'bold',
       },
       libraryImageStyle: {
-        width: '180px',
-        height: '110px',
-        marginBottom: '1rem',
+        width: '200px',
+        height: '120px',
+        marginBottom: '1.5rem',
       },
       buttonsContainerStyle: {
         display: 'flex',
         justifyContent: 'center',
-        marginBottom: '2rem',
+        flexWrap: 'wrap', // Allow wrapping on smaller screens
+        marginBottom: '2.5rem',
       },
       buttonStyle: {
         display: 'inline-block',
         margin: '0.5rem',
-        padding: '0.7rem 1.5rem',
+        padding: '0.8rem 2rem',
         borderRadius: '8px',
         textDecoration: 'none',
-        color: 'black', // Changed to black
+        color: 'white',
         fontWeight: 'bold',
         transition: 'background-color 0.3s, transform 0.3s',
       },
       faqButtonStyle: {
-        backgroundColor: '#FFABAB',
+        backgroundColor: '#FF6F61',
       },
       myBooksButtonStyle: {
-        backgroundColor: '#FFC3A0',
+        backgroundColor: '#FF8E53',
       },
       statsButtonStyle: {
-        backgroundColor: '#FFDD94',
+        backgroundColor: '#FFC107',
       },
     };
   },
   methods: {
     updateStyles() {
       if (window.innerWidth <= 768) {
-        this.dashboardContentStyle.padding = '1rem';
-        this.dashboardTitleStyle.fontSize = '2rem';
+        this.dashboardContentStyle.padding = '1.5rem';
+        this.dashboardTitleStyle.fontSize = '2.2rem';
       } else {
-        this.dashboardContentStyle.padding = '2rem';
-        this.dashboardTitleStyle.fontSize = '2.5rem';
+        this.dashboardContentStyle.padding = '2.5rem';
+        this.dashboardTitleStyle.fontSize = '2.8rem';
       }
     },
   },

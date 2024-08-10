@@ -10,9 +10,8 @@ const ForgotPassword = {
           <input v-model="email" type="email" placeholder="Email" required style="width: 100%; padding: 0.75rem; border-radius: 5px; border: 1px solid #ced4da;" />
           <button type="submit" style="width: 100%; padding: 0.75rem; border: none; border-radius: 5px; background-color: #007bff; color: white; cursor: pointer;">Submit</button>
         </form>
-        <div v-if="resetUrl" style="margin-top: 1rem; padding: 1rem; border: 1px solid #ced4da; border-radius: 5px; background-color: #fff3e0;">
-          <p>Password reset URL: <a :href="resetUrl" target="_blank">{{ resetUrl }}</a></p>
-          <p>Reset Token: {{ token }}</p>
+        <div v-if="emailSent" style="margin-top: 1rem; padding: 1rem; border: 1px solid #ced4da; border-radius: 5px; background-color: #e6ffe6;">
+          <p>A password reset link has been sent to your email.</p>
         </div>
       </div>
       <footer style="position: fixed; bottom: 0; width: 100%; text-align: center; padding: 1rem 0; background-color: #f5f5dc; color: #6c757d;">
@@ -23,8 +22,7 @@ const ForgotPassword = {
   data() {
     return {
       email: "",
-      resetUrl: null,
-      token: null,
+      emailSent: false,
     };
   },
   methods: {
@@ -41,11 +39,7 @@ const ForgotPassword = {
       });
 
       if (res.ok) {
-        const data = await res.json();
-        console.log(data);
-        this.resetUrl = data.reset_url;
-        this.token = data.token;
-        alert("A password reset token has been generated. Check the console or below.");
+        this.emailSent = true;
       } else {
         const errorData = await res.json();
         console.error("Email submission failed:", errorData);

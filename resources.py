@@ -1,15 +1,18 @@
 from flask_restful import Api, Resource, reqparse, fields, marshal_with
 from flask_security import auth_required
 from models import Section as SectionModel, Book as BookModel, BookRequest, BookIssue ,User as UserModel, RatingsAndReviews
-from extensions import db,cache
+from extensions import db,cache,mail
+from flask_mail import Message
 from datetime import datetime, timedelta
 from flask import jsonify
 from flask import request
+from flask_security import current_user
 from sqlalchemy import func
 import io
 import matplotlib.pyplot as plt
 from flask import send_file
 import matplotlib
+from flask_security.utils import hash_password, verify_password
 matplotlib.use('Agg')
 
 
@@ -244,7 +247,7 @@ class BookRequestRejectResource(Resource):
 class BorrowedBooksResource(Resource):
     @auth_required('token')
     @marshal_with(borrowed_book_fields)
-    @cache.cached(timeout=60, key_prefix='borrowed_books_user_%s')
+    # @cache.cached(timeout=60, key_prefix='borrowed_books_user_%s')
     def get(self, user_id):
         borrowed_books = db.session.query(
             BookIssue.id,
@@ -270,7 +273,7 @@ class BorrowedBooksResource(Resource):
 
 class BookCountResource(Resource):
     @auth_required('token')
-    @cache.cached(timeout=300)
+    # @cache.cached(timeout=300)
     def get(self):
         try:
             total_books = db.session.query(BookModel).count()
@@ -280,7 +283,7 @@ class BookCountResource(Resource):
 
 class SectionCountResource(Resource):
     @auth_required('token')
-    @cache.cached(timeout=300)
+    # @cache.cached(timeout=300)
     def get(self):
         try:
             total_sections = db.session.query(SectionModel).count()
@@ -290,7 +293,7 @@ class SectionCountResource(Resource):
 
 class PendingRequestCountResource(Resource):
     @auth_required('token')
-    @cache.cached(timeout=60)
+    # @cache.cached(timeout=60)
     def get(self):
         try:
             pending_requests = db.session.query(BookRequest).count()
@@ -333,7 +336,7 @@ class SingleDeleteSectionResource(Resource):
 class BooksBySectionResource(Resource):
     @auth_required('token')
     @marshal_with(book_fields)
-    @cache.cached(timeout=300, key_prefix='books_by_section_%s')
+    # @cache.cached(timeout=300, key_prefix='books_by_section_%s')
     def get(self, section_id):
         books = BookModel.query.filter_by(section_id=section_id).all()
         if not books:
@@ -402,8 +405,16 @@ class ForgotPasswordResource(Resource):
 
         if user:
             reset_token = user.get_reset_password_token()
-            reset_url = f"{request.url_root}api/reset-password?token={reset_token}"
-            return {'reset_url': reset_url, 'token': reset_token}, 200
+            reset_url = f"{request.url_root}#/reset-password?token={reset_token}"
+
+            # Send the email with the reset link
+            msg = Message(subject="Password Reset Request",
+                          sender='manyasharma0309@gmail.com',
+                          recipients=[user.email])
+            msg.body = f"To reset your password, click the following link: {reset_url}\n\nIf you did not request this, please ignore this email."
+            mail.send(msg)
+
+            return {'message': 'Password reset email has been sent'}, 200
         else:
             return {'message': 'Email not found'}, 404
 
@@ -417,7 +428,7 @@ class ResetPasswordResource(Resource):
         user = UserModel.query.filter_by(reset_password_token=args['token']).first()
 
         if user and user.reset_password_expires > datetime.utcnow():
-            user.password = args['new_password']
+            user.password = hash_password(args['new_password'])
             user.reset_password_token = None
             user.reset_password_expires = None
             db.session.commit()
@@ -560,134 +571,87 @@ class UpdateProfileResource(Resource):
         user.email = args['new_email']
         user.username = args['username']
         if args['password']:
-            user.password = args['password']  # Make sure to hash the password
-
+            hashed_password = hash_password(args['password'])
+            user.password = hashed_password
         db.session.commit()
         return {'message': 'Profile updated successfully'}, 200
+
 
 
 class UserBarDataResource(Resource):
     @auth_required()
     def get(self):
         """
-        Fetches the total number of books per section.
+        Fetches the total number of books per section for the logged-in user.
+        Includes the section names.
         """
-        sections = db.session.query(BookModel.section_id, func.count(BookModel.id)).group_by(BookModel.section_id).all()
-        labels = [f'Section {section_id}' for section_id, count in sections]
-        values = [count for section_id, count in sections]
+        user_id = current_user.id
+        sections = db.session.query(SectionModel.title, func.count(BookModel.id))\
+            .join(BookModel, BookModel.section_id == SectionModel.id)\
+            .join(BookIssue, BookModel.id == BookIssue.book_id)\
+            .filter(BookIssue.user_id == user_id)\
+            .group_by(SectionModel.title).all()
 
-        fig, ax = plt.subplots()
-        ax.bar(labels, values)
-        ax.set_title('Total Books per Section')
-        ax.set_xlabel('Section')
-        ax.set_ylabel('Total Books')
+        labels = [section_title for section_title, count in sections]
+        values = [count for section_title, count in sections]
 
-        img = io.BytesIO()
-        plt.savefig(img, format='png')
-        img.seek(0)
-        plt.close(fig)
+        return jsonify({'labels': labels, 'data': values})
 
-        return send_file(img, mimetype='image/png')
 
 class UserLineDataResource(Resource):
     @auth_required()
     def get(self):
-        book_issues = db.session.query(BookIssue.date_issued, func.count(BookIssue.id)).group_by(BookIssue.date_issued).all()
+        """
+        Fetches the number of book issues over time for the logged-in user.
+        """
+        user_id = current_user.id
+        book_issues = db.session.query(BookIssue.date_issued, func.count(BookIssue.id))\
+            .filter(BookIssue.user_id == user_id)\
+            .group_by(BookIssue.date_issued).all()
+
         labels = [date_issued.strftime('%Y-%m-%d') for date_issued, count in book_issues]
         values = [count for date_issued, count in book_issues]
 
-        fig, ax = plt.subplots()
-        ax.plot(labels, values, marker='o')
-        ax.set_title('Number of Book Issues Over Time')
-        ax.set_xlabel('Date Issued')
-        ax.set_ylabel('Number of Issues')
-        plt.xticks(rotation=45)
-        plt.tight_layout()
+        return jsonify({'labels': labels, 'data': values})
 
-        img = io.BytesIO()
-        plt.savefig(img, format='png')
-        img.seek(0)
-        plt.close(fig)
 
-        return send_file(img, mimetype='image/png')
+
     
-class UserPieDataResource(Resource):
-    @auth_required()
-    def get(self):
-        """
-        Fetches the distribution of book issues by user.
-        """
-        issues = db.session.query(BookIssue.user_id, func.count(BookIssue.id)).group_by(BookIssue.user_id).all()
-        user_ids = [f'User {user_id}' for user_id, count in issues]
-        values = [count for user_id, count in issues]
-
-        fig, ax = plt.subplots()
-        ax.pie(values, labels=user_ids, autopct='%1.1f%%')
-        ax.set_title('Distribution of Book Issues by User')
-
-        img = io.BytesIO()
-        plt.savefig(img, format='png')
-        img.seek(0)
-        plt.close(fig)
-
-        return send_file(img, mimetype='image/png')
-
 class LibrarianBarDataResource(Resource):
     @auth_required('token')
     def get(self):
-        sections = db.session.query(BookModel.section_id, func.count(BookModel.id)).group_by(BookModel.section_id).all()
-        labels = [f'Section {section_id}' for section_id, count in sections]
-        values = [count for section_id, count in sections]
+        sections = db.session.query(BookModel.section_id, SectionModel.title, func.count(BookModel.id))\
+                              .join(SectionModel, BookModel.section_id == SectionModel.id)\
+                              .group_by(BookModel.section_id, SectionModel.title).all()
+        labels = [section_title for section_id, section_title, count in sections]
+        values = [count for section_id, section_title, count in sections]
 
-        fig, ax = plt.subplots()
-        ax.bar(labels, values)
-        ax.set_title('Total Books per Section')
-        ax.set_xlabel('Section')
-        ax.set_ylabel('Total Books')
+        return {'labels': labels, 'values': values}
 
-        img = io.BytesIO()
-        plt.savefig(img, format='png')
-        img.seek(0)
-        plt.close(fig)
 
-        return send_file(img, mimetype='image/png')
+
 
 class LibrarianLineDataResource(Resource):
     @auth_required('token')
     def get(self):
-        # Example data: Number of book issues over time
         book_issues = db.session.query(BookIssue.date_issued, db.func.count(BookIssue.id)).group_by(BookIssue.date_issued).all()
         labels = [date_issued.strftime('%Y-%m-%d') for date_issued, count in book_issues]
         values = [count for date_issued, count in book_issues]
 
-        fig, ax = plt.subplots()
-        ax.plot(labels, values, marker='o', color='red')
-        ax.set_xlabel('Date Issued')
-        ax.set_ylabel('Number of Book Issues')
-        ax.set_title('Book Issues Over Time')
-        plt.xticks(rotation=45, ha='right')
-
-        img = io.BytesIO()
-        plt.savefig(img, format='png')
-        img.seek(0)
-        return send_file(img, mimetype='image/png')
+        return {'labels': labels, 'values': values}
 
 class LibrarianPieDataResource(Resource):
     @auth_required('token')
     def get(self):
-        # Example data: Distribution of book requests by status
-        requests = db.session.query(BookRequest.status, db.func.count(BookRequest.id)).group_by(BookRequest.status).all()
-        labels = ['Approved' if status else 'Pending' for status, count in requests]
-        values = [count for status, count in requests]
+        # Query the number of books issued, grouped by user
+        issued_books = db.session.query(BookIssue.user_id, db.func.count(BookIssue.id)).group_by(BookIssue.user_id).all()
+        
+        # Generate labels and values for the pie chart
+        labels = [f'User {user_id}' for user_id, count in issued_books]
+        values = [count for user_id, count in issued_books]
 
-        fig, ax = plt.subplots()
-        ax.pie(values, labels=labels, autopct='%1.1f%%', startangle=90)
-        ax.set_title('Distribution of Book Requests by Status')
+        return {'labels': labels, 'values': values}
 
-        img = io.BytesIO()
-        plt.savefig(img, format='png')
-        img.seek(0)
-        return send_file(img, mimetype='image/png')
 
 class BookRatingsResource(Resource):
     def get(self, book_id):
@@ -737,7 +701,6 @@ api.add_resource(RatingsAndReviewsResource, '/ratings-and-reviews')
 api.add_resource(UpdateProfileResource, '/update-profile')
 api.add_resource(UserBarDataResource, '/user-bar-data')
 api.add_resource(UserLineDataResource, '/user-line-data')
-api.add_resource(UserPieDataResource, '/user-pie-data')
 api.add_resource(LibrarianBarDataResource, '/librarian-bar-data')
 api.add_resource(LibrarianLineDataResource, '/librarian-line-data')
 api.add_resource(LibrarianPieDataResource, '/librarian-pie-data')

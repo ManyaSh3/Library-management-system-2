@@ -20,7 +20,7 @@ const Signup = {
         <button @click="submitInfo" style="width: 100%; padding: 0.75rem; border: none; border-radius: 5px; background-color: #007bff; color: white; cursor: pointer;">Submit</button>
       </div>
       <footer style="position: fixed; bottom: 0; width: 100%; text-align: center; padding: 1rem 0; background-color: #f5f5dc; color: #6c757d;">
-        <p>Already have an account? <router-link to="/login" style="color: #007bff;">Login</router-link></p>
+        <p>Already have an account? <router-link to="/user-login" style="color: #007bff;">Login</router-link></p>
       </footer>
     </div>
   `,

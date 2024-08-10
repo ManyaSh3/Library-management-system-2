@@ -2,57 +2,53 @@ import store from "../utils/store.js";
 
 const Navbar = {
   template: `
-    <nav class="navbar">
-      <div class="navbar-brand">
-        <router-link to='/'>Library System</router-link>
-      </div>
-      <div class="navbar-links">
-        <router-link to='/'>Home</router-link>
-        <router-link v-if="isLoggedIn" to='/profile'>Profile</router-link>
-        <router-link v-if="!isLoggedIn" to='/user-login'>Login</router-link>
-        <router-link v-if="!isLoggedIn" to='/signup'>Signup</router-link>
-        <a v-if="isLoggedIn" :href="logoutURL">Logout</a>
-      </div>
+    <nav style="background-color: #333; padding: 1rem; display: flex; justify-content: space-between; align-items: center;">
+      <!-- Library Management System Button on the left -->
+      <router-link to="/" style="color: white; text-decoration: none; padding: 0.5rem 1rem; background-color: #444; border-radius: 4px; transition: background-color 0.3s;">Library Management System</router-link>
+      
+      <!-- Navigation links on the right -->
+      <ul style="list-style-type: none; margin: 0; padding: 0; display: flex; gap: 1rem;">
+        <li><router-link to="/" style="color: white; text-decoration: none; padding: 0.5rem 1rem; transition: background-color 0.3s;">Home</router-link></li>
+        <li v-if="!isLoggedIn"><router-link to="/user-login" style="color: white; text-decoration: none; padding: 0.5rem 1rem; transition: background-color 0.3s;">Login</router-link></li>
+        <li v-if="!isLoggedIn"><router-link to="/signup" style="color: white; text-decoration: none; padding: 0.5rem 1rem; transition: background-color 0.3s;">Sign Up</router-link></li>
+        <li v-if="isLoggedIn && isLibrarian"><router-link to="/lib-dashboard" style="color: white; text-decoration: none; padding: 0.5rem 1rem; transition: background-color 0.3s;">Librarian Dashboard</router-link></li>
+        <li v-if="isLoggedIn"><router-link to="/user-dashboard" style="color: white; text-decoration: none; padding: 0.5rem 1rem; transition: background-color 0.3s;">User Dashboard</router-link></li>
+        <li v-if="isLoggedIn"><router-link to="/profile" style="color: white; text-decoration: none; padding: 0.5rem 1rem; transition: background-color 0.3s;">Profile</router-link></li>
+        <li v-if="isLoggedIn"><a href="#" @click.prevent="logout" style="color: white; text-decoration: none; padding: 0.5rem 1rem; transition: background-color 0.3s;">Logout</a></li>
+      </ul>
     </nav>
   `,
   computed: {
     isLoggedIn() {
       return store.state.loggedIn;
-    }
+    },
+    isLibrarian() {
+      return store.state.role === "librarian";
+    },
   },
-  data() {
-    return {
-      logoutURL: window.location.origin + "/logout",
-    };
-  },
-  style: `
-    .navbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem 2rem;
-      background-color: #333;
-      color: white;
+  methods: {
+    async logout() {
+      try {
+        const res = await fetch(window.location.origin + "/logout", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${store.state.token}`,
+          },
+          credentials: "same-origin",
+        });
+
+        if (res.ok) {
+          store.commit('logout');
+          this.$router.push('/user-login'); // Redirect to login page after logout
+        } else {
+          console.error("Logout request failed with status:", res.status);
+        }
+      } catch (error) {
+        console.error("Error during logout request:", error);
+      }
     }
-    .navbar-brand {
-      font-size: 1.5rem;
-      font-weight: bold;
-    }
-    .navbar-links {
-      display: flex;
-      gap: 1rem;
-    }
-    .navbar-links a {
-      color: white;
-      text-decoration: none;
-      padding: 0.5rem 1rem;
-      border-radius: 4px;
-      transition: background-color 0.3s ease;
-    }
-    .navbar-links a:hover {
-      background-color: #555;
-    }
-  `
+  }
 };
 
 export default Navbar;
