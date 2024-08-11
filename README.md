@@ -42,13 +42,13 @@ The Library Management System V2 is a modern, multi-user application designed to
 1. Clone the repository to your local machine:
 
     ```bash
-    git clone <repository-url>
+    git clone https://github.com/your-username/library-management-system-2.git
     ```
 
 2. Navigate to the project directory:
 
     ```bash
-    cd <project-directory>
+    cd library-management-system-2
     ```
 
 3. Install dependencies:
