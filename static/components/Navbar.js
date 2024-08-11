@@ -15,7 +15,7 @@ const Navbar = {
         <li v-if="isLoggedIn && !isLibrarian"><router-link to="/user-dashboard" style="color: white; text-decoration: none; padding: 0.5rem 1rem; transition: background-color 0.3s;">User Dashboard</router-link></li>
         <li v-if="isLoggedIn"><router-link to="/profile" style="color: white; text-decoration: none; padding: 0.5rem 1rem; transition: background-color 0.3s;">Profile</router-link></li>
         <li v-if="isLoggedIn"><a href="#" @click.prevent="logout" style="color: white; text-decoration: none; padding: 0.5rem 1rem; transition: background-color 0.3s;">Logout</a></li>
-        <li v-if="isLoggedIn"><
+        <li v-if="isLoggedIn"></li>
       </ul>
     </nav>
   `,

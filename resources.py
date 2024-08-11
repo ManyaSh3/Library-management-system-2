@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 from flask import send_file
 import matplotlib
 from flask_security.utils import hash_password, verify_password
+import time
 matplotlib.use('Agg')
 
 
@@ -89,7 +90,7 @@ borrowed_book_fields = {
 class SectionResource(Resource):
     @auth_required('token')
     @marshal_with(section_fields)
-    # @cache.cached(timeout=300)
+    @cache.cached(timeout=300,key_prefix=lambda:'all_sections_' + str(time()))
     def get(self):
         all_sections = SectionModel.query.all()
         return all_sections
@@ -109,7 +110,7 @@ class SectionResource(Resource):
 class BookResource(Resource):
     @auth_required('token')
     @marshal_with(book_fields)
-    # @cache.cached(timeout=300, key_prefix='books_section_%s')
+    @cache.cached(timeout=300, key_prefix=lambda:'books_section_' + str(time()))
     def get(self, section_id):
         books = BookModel.query.filter_by(section_id=section_id).all()
         return books
@@ -170,7 +171,7 @@ class BookRequestResource(Resource):
 class BookRequestListResource(Resource):
     @auth_required('token')
     @marshal_with(book_request_fields)
-    # @cache.cached(timeout=60)
+    @cache.cached(timeout=60, key_prefix=lambda:'book_requests_' + str(time()))
     def get(self):
         # Perform a join between BookRequest and Book to get the title and author
         all_requests = db.session.query(
@@ -247,7 +248,7 @@ class BookRequestRejectResource(Resource):
 class BorrowedBooksResource(Resource):
     @auth_required('token')
     @marshal_with(borrowed_book_fields)
-    # @cache.cached(timeout=60, key_prefix='borrowed_books_user_%s')
+    @cache.cached(timeout=60, key_prefix=lambda:'borrowed_books_user_' + str(time()))
     def get(self, user_id):
         borrowed_books = db.session.query(
             BookIssue.id,
@@ -273,7 +274,7 @@ class BorrowedBooksResource(Resource):
 
 class BookCountResource(Resource):
     @auth_required('token')
-    # @cache.cached(timeout=300)
+    @cache.cached(timeout=300,key_prefix=lambda: 'book_count_' + str(time()))
     def get(self):
         try:
             total_books = db.session.query(BookModel).count()
@@ -282,8 +283,9 @@ class BookCountResource(Resource):
             return jsonify({'error': str(e)}), 500
 
 class SectionCountResource(Resource):
+    
     @auth_required('token')
-    # @cache.cached(timeout=300)
+    @cache.cached(timeout=30,key_prefix=lambda: 'section_count_' + str(time()))
     def get(self):
         try:
             total_sections = db.session.query(SectionModel).count()
@@ -293,7 +295,7 @@ class SectionCountResource(Resource):
 
 class PendingRequestCountResource(Resource):
     @auth_required('token')
-    # @cache.cached(timeout=60)
+    @cache.cached(timeout=60,key_prefix=lambda: 'pending_request_count_' + str(time()))
     def get(self):
         try:
             pending_requests = db.session.query(BookRequest).count()
@@ -304,7 +306,7 @@ class PendingRequestCountResource(Resource):
 class SingleSectionResource(Resource):
     @auth_required('token')
     @marshal_with(section_fields)
-    @cache.cached(timeout=300, key_prefix='single_section_%s')
+    @cache.cached(timeout=300, key_prefix=lambda:'section_' + str(time()))
     def get(self, section_id):
         section = SectionModel.query.get(section_id)
         if not section:
@@ -330,13 +332,13 @@ class SingleDeleteSectionResource(Resource):
         if not section:
             return {'message': 'Section not found'}, 404
         db.session.delete(section)
-        db.session.commit()
+        db.session.commit()        
         return {'message': 'Section deleted'}, 200
     
 class BooksBySectionResource(Resource):
     @auth_required('token')
     @marshal_with(book_fields)
-    # @cache.cached(timeout=300, key_prefix='books_by_section_%s')
+    @cache.cached(timeout=300,key_prefix=lambda:'books_section_' + str(time()))
     def get(self, section_id):
         books = BookModel.query.filter_by(section_id=section_id).all()
         if not books:
@@ -356,7 +358,7 @@ class DeleteBookResource(Resource):
         
         # Now delete the book
         db.session.delete(book)
-        db.session.commit()
+        db.session.commit()        
         return {'message': 'Book deleted'}, 200
 
     
@@ -483,7 +485,7 @@ class RevokeAccessResource(Resource):
 
 class BookDetailsResource(Resource):
     @auth_required('token')
-    # @cache.cached(timeout=300, key_prefix='book_details_%s')
+    @cache.cached(timeout=300, key_prefix=lambda:'book_details_' + str(time()))
     def get(self, book_id):
         book = BookModel.query.get(book_id)
         if not book:
