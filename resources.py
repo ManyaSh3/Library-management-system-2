@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from flask import send_file
 import matplotlib
 from flask_security.utils import hash_password, verify_password
-import time
+from time import time
 matplotlib.use('Agg')
 
 
