@@ -25,7 +25,7 @@ The Library Management System V2 is a modern, multi-user application designed to
 
 - **Authentication**:
     - User and Librarian login using username or email and password.
-    - Flask Security or JWT-based Token Authentication.
+    - Flask Security for Authentication.
 
 - **E-Book Management**:
     - Issue and revoke access to e-books.
