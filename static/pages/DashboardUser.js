@@ -78,21 +78,22 @@ const DashboardUser = {
         padding: '0.8rem 2rem',
         borderRadius: '8px',
         textDecoration: 'none',
-        color: 'white',
+        color: 'black',
         fontWeight: 'bold',
         transition: 'background-color 0.3s, transform 0.3s',
       },
       faqButtonStyle: {
-        backgroundColor: '#FF6F61',
+        backgroundColor: '#a6c9e2', // Pastel light blue
       },
       myBooksButtonStyle: {
-        backgroundColor: '#FF8E53',
+        backgroundColor: '#a6c9e2', // Pastel light blue
       },
       statsButtonStyle: {
-        backgroundColor: '#FFC107',
+        backgroundColor: '#a6c9e2', // Pastel light blue
       },
     };
   },
+  
   methods: {
     updateStyles() {
       if (window.innerWidth <= 768) {

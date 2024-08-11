@@ -3,7 +3,7 @@ import store from "../utils/store.js";
 
 const Login = {
   template: `
-    <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; background-color: #f5f5dc;">
+    <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; background-color: #f5f5f5;">
       <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%;">
         <div style="background: rgba(255, 255, 255, 0.9); padding: 2rem; border-radius: 8px; box-shadow: 0 0 15px rgba(0, 0, 0, 0.2); width: 100%; max-width: 400px; text-align: center;">
           <h3 style="font-size: 1.5rem; color: #007bff; margin-bottom: 1.5rem;">Login</h3>

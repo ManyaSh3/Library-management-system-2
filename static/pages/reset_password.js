@@ -2,7 +2,7 @@ import router from "../utils/router.js";
 
 const ResetPassword = {
   template: `
-    <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; background-color: #f5f5dc;">
+    <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; background-color: #f5f5f5;">
       <div style="max-width: 400px; width: 100%; padding: 2rem; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); border-radius: 8px; background-color: white;">
         <h3 style="text-align: center; margin-bottom: 1.5rem;">Reset Password</h3>
         <div style="margin-bottom: 1rem;">

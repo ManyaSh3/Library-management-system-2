@@ -13,6 +13,7 @@ const AddSection = {
           <input v-model="description" type="text" placeholder="Description" required style="width: 100%; padding: 0.5rem; border-radius: 5px; border: 1px solid #ced4da;" />
         </div>
         <button @click="submitSection" style="width: 100%; padding: 0.5rem; border: none; border-radius: 5px; background-color: #007bff; color: white; cursor: pointer;">Add Section</button>
+        <div v-if="errorMessage" style="color: red; margin-top: 1rem;">{{ errorMessage }}</div>
       </div>
     </div>
   `,
@@ -20,22 +21,57 @@ const AddSection = {
     return {
       title: '',
       description: '',
+      existingSections: [],
+      errorMessage: '', // To show specific error messages
     };
   },
+  created() {
+    this.fetchExistingSections(); // Fetch existing sections when the component is created
+  },
   methods: {
-    async submitSection() {
+    async fetchExistingSections() {
       try {
-        const res = await fetch(window.location.origin + "/add-section", {
+        const res = await fetch(`${window.location.origin}/api/sections`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authentication-Token": sessionStorage.getItem("token"),
+          },
+        });
+        if (res.ok) {
+          this.existingSections = await res.json();
+        } else {
+          console.error("Failed to fetch existing sections");
+          this.errorMessage = 'Failed to load sections';
+        }
+      } catch (error) {
+        console.error("Error fetching existing sections:", error);
+        this.errorMessage = 'Failed to load sections';
+      }
+    },
+    async submitSection() {
+      // Check if the section title already exists
+      const sectionExists = this.existingSections.some(
+        section => section.title.toLowerCase() === this.title.toLowerCase()
+      );
+
+      if (sectionExists) {
+        this.errorMessage = 'A section with this title already exists. Please choose a different title.';
+        return;
+      }
+
+      try {
+        const res = await fetch(`${window.location.origin}/add-section`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authentication-Token": sessionStorage.getItem("token"), // Assuming you use token-based authentication
+            "Authentication-Token": sessionStorage.getItem("token"),
           },
           body: JSON.stringify({
             title: this.title,
             description: this.description,
           }),
-          credentials: "same-origin", // Include credentials (cookies) with the request
+          credentials: "same-origin",
         });
 
         if (res.ok) {
@@ -44,11 +80,11 @@ const AddSection = {
         } else {
           const errorData = await res.json();
           console.error("Add section request failed:", errorData);
-          alert('Failed to add section');
+          this.errorMessage = errorData.message || 'Failed to add section';
         }
       } catch (error) {
         console.error("Error during add section request:", error);
-        alert('Failed to add section');
+        this.errorMessage = 'Failed to add section';
       }
     },
   },

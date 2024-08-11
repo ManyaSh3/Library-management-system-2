@@ -79,6 +79,36 @@ const AddBook = {
       }
 
       try {
+        // Fetch existing books for the selected section
+        const existingBooksRes = await fetch(`${window.location.origin}/api/sections/${this.selectedSection}/books`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authentication-Token": sessionStorage.getItem("token"),
+          },
+        });
+
+        if (existingBooksRes.ok) {
+          const existingBooks = await existingBooksRes.json();
+
+          // Check for duplicates
+          const bookExists = existingBooks.some(book => 
+            book.title.toLowerCase() === this.title.toLowerCase() && 
+            book.author.toLowerCase() === this.author.toLowerCase()
+          );
+
+          if (bookExists) {
+            alert('Book with the same title and author already exists in this section.');
+            return;
+          }
+        } else {
+          const errorData = await existingBooksRes.json();
+          console.error("Fetch existing books request failed:", errorData);
+          alert('Failed to fetch existing books');
+          return;
+        }
+
+        // Proceed to add the book if no duplicates are found
         const res = await fetch(`${window.location.origin}/api/sections/${this.selectedSection}/books`, {
           method: "POST",
           headers: {

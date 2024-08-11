@@ -12,9 +12,10 @@ const Navbar = {
         <li v-if="!isLoggedIn"><router-link to="/user-login" style="color: white; text-decoration: none; padding: 0.5rem 1rem; transition: background-color 0.3s;">Login</router-link></li>
         <li v-if="!isLoggedIn"><router-link to="/signup" style="color: white; text-decoration: none; padding: 0.5rem 1rem; transition: background-color 0.3s;">Sign Up</router-link></li>
         <li v-if="isLoggedIn && isLibrarian"><router-link to="/lib-dashboard" style="color: white; text-decoration: none; padding: 0.5rem 1rem; transition: background-color 0.3s;">Librarian Dashboard</router-link></li>
-        <li v-if="isLoggedIn"><router-link to="/user-dashboard" style="color: white; text-decoration: none; padding: 0.5rem 1rem; transition: background-color 0.3s;">User Dashboard</router-link></li>
+        <li v-if="isLoggedIn && !isLibrarian"><router-link to="/user-dashboard" style="color: white; text-decoration: none; padding: 0.5rem 1rem; transition: background-color 0.3s;">User Dashboard</router-link></li>
         <li v-if="isLoggedIn"><router-link to="/profile" style="color: white; text-decoration: none; padding: 0.5rem 1rem; transition: background-color 0.3s;">Profile</router-link></li>
         <li v-if="isLoggedIn"><a href="#" @click.prevent="logout" style="color: white; text-decoration: none; padding: 0.5rem 1rem; transition: background-color 0.3s;">Logout</a></li>
+        <li v-if="isLoggedIn"><
       </ul>
     </nav>
   `,

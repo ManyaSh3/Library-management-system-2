@@ -22,24 +22,27 @@ const DashboardLibrarian = {
           </div>
         </div>
         <div :style="buttonsContainerStyle">
+        <div :style="buttonsContainerStyle">
           <router-link :style="[buttonStyle, addButtonStyle]" to="/add-section">
-            <i class="fas fa-plus-circle"></i> Add New Section
+            <i class="fas fa-plus-circle" :style="{ color: '#333' }"></i> Add New Section
           </router-link>
           <router-link :style="[buttonStyle, addButtonStyle]" to="/add-book">
-            <i class="fas fa-plus-circle"></i> Add New Book
+            <i class="fas fa-plus-circle" :style="{ color: '#333' }"></i> Add New Book
           </router-link>
           <router-link :style="[buttonStyle, yellowButtonStyle]" to="/view-requests">
-            <i class="fas fa-eye"></i> View Requests
+            <i class="fas fa-eye" :style="{ color: '#333' }"></i> View Requests
           </router-link>
           <button @click="fetchIssuedBooks" :style="[buttonStyle, yellowButtonNoBorderStyle]">
-            <i class="fas fa-book-open"></i> View Issued Books
+            <i class="fas fa-book-open" :style="{ color: '#333' }"></i> View Issued Books
           </button>
           <button @click="toggleRatingsAndReviews" :style="[buttonStyle, yellowButtonNoBorderStyle]">
-            <i class="fas fa-star"></i> View Ratings and Reviews
+            <i class="fas fa-star" :style="{ color: '#333' }"></i> View Ratings and Reviews
           </button>
           <router-link :style="[buttonStyle, statsButtonStyle]" to="/librarian-dashboard">
-            <i class="fas fa-chart-bar"></i> View Stats
+            <i class="fas fa-chart-bar" :style="{ color: '#fff' }"></i> View Stats
           </router-link>
+        </div>
+
         </div>
 
         <h2 :style="sectionTitleStyle">Sections</h2>
@@ -187,8 +190,8 @@ const DashboardLibrarian = {
       },
       
       statsButtonStyle: {
-        backgroundColor: 'blue',
-        color: 'white'
+        backgroundColor: '#a6c9e2', // Change to pastel light blue if needed
+        color: '#333',
       },
       
       statCardStyle: {
@@ -227,19 +230,19 @@ const DashboardLibrarian = {
         borderRadius: '5px',
         textDecoration: 'none',
         fontSize: '1rem',
-        color: 'white',
-        backgroundColor: '#007bff',
+        color: '#333', // Darker color for text to ensure readability
+        backgroundColor: '#a6c9e2', // Pastel light blue
         boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
         transition: 'background-color 0.3s, transform 0.3s',
       },
       addButtonStyle: {
-        backgroundColor: '#28a745',
+        backgroundColor: '#a6c9e2', // Also set pastel light blue here
       },
       yellowButtonStyle: {
-        backgroundColor: '#ffc107',
+        backgroundColor: '#a6c9e2', // Also set pastel light blue here
       },
       yellowButtonNoBorderStyle: {
-        backgroundColor: '#ffc107',
+        backgroundColor: '#a6c9e2', // Also set pastel light blue here
         border: 'none',
       },
       sectionTitleStyle: {
@@ -255,7 +258,7 @@ const DashboardLibrarian = {
         boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
       },
       tableHeadStyle: {
-        backgroundColor: '#007bff',
+        backgroundColor: '#333',
         color: 'white',
       },
       tableRowStyle: {

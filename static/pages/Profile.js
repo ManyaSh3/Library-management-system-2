@@ -40,7 +40,7 @@ const Profile = {
         alignItems: 'center',
         justifyContent: 'center',
         height: '100vh',
-        backgroundColor: '#f0f2f5',
+        backgroundColor: '#f9f9f9',
       },
       profileContentStyle: {
         textAlign: 'center',

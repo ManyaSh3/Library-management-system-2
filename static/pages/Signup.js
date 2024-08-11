@@ -2,7 +2,7 @@ import router from "../utils/router.js";
 
 const Signup = {
   template: `
-    <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; background-color: #f5f5dc;">
+    <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 87vh; background-color: #f5f5f5;">
       <div style="max-width: 400px; width: 100%; padding: 2rem; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); border-radius: 8px; background-color: white;">
         <h3 style="text-align: center; margin-bottom: 1.5rem;">Sign Up</h3>
         <div style="margin-bottom: 1rem;">
@@ -18,10 +18,10 @@ const Signup = {
           </select>
         </div>
         <button @click="submitInfo" style="width: 100%; padding: 0.75rem; border: none; border-radius: 5px; background-color: #007bff; color: white; cursor: pointer;">Submit</button>
+        <p style="text-align:center; margin-top: 1rem">Already have an account? <router-link to="/user-login" style="color: #007bff;">Login</router-link></p>
+
       </div>
-      <footer style="position: fixed; bottom: 0; width: 100%; text-align: center; padding: 1rem 0; background-color: #f5f5dc; color: #6c757d;">
-        <p>Already have an account? <router-link to="/user-login" style="color: #007bff;">Login</router-link></p>
-      </footer>
+      
     </div>
   `,
   data() {
